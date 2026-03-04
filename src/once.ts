@@ -12,6 +12,9 @@ function resolveKey<TArgs extends any[]>(
   if (typeof keyOption === 'function') return keyOption(...args)
   if (typeof keyOption === 'string') return keyOption
   if (args.length === 0) return '__default__'
+  if (args.length === 1 && (typeof args[0] === 'string' || typeof args[0] === 'number')) {
+    return String(args[0])
+  }
   try {
     return JSON.stringify(args)
   } catch {
@@ -43,17 +46,20 @@ export function once<TArgs extends any[], TResult>(
       return fn(...args)
     }
 
-    const promise = fn(...args).finally(() => {
-      const entry = inFlight.get(key)
-      if (entry && entry.promise === promise) {
-        inFlight.delete(key)
-      }
-    })
+    const promise = fn(...args)
 
-    inFlight.set(key, {
-      promise,
-      expiresAt: ttl != null ? now + ttl : null,
-    })
+    const expiresAt = ttl != null ? now + ttl : null
+
+    if (ttl == null) {
+      promise.finally(() => {
+        const entry = inFlight.get(key)
+        if (entry && entry.promise === promise) {
+          inFlight.delete(key)
+        }
+      })
+    }
+
+    inFlight.set(key, { promise, expiresAt })
 
     return promise
   } as OnceInstance<TArgs, TResult>
