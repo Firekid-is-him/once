@@ -37,7 +37,8 @@ export function once<TArgs extends any[], TResult>(
     if (existing) {
       if (existing.expiresAt === null || existing.expiresAt > now) {
         if (onDeduplicated) onDeduplicated(key)
-        return existing.promise
+        // Return a NEW derived promise for each caller so each has its own handler slot
+        return existing.promise.then(v => v)
       }
       inFlight.delete(key)
     }
@@ -50,18 +51,19 @@ export function once<TArgs extends any[], TResult>(
 
     const expiresAt = ttl != null ? now + ttl : null
 
+    inFlight.set(key, { promise, expiresAt })
+
     if (ttl == null) {
       promise.finally(() => {
         const entry = inFlight.get(key)
         if (entry && entry.promise === promise) {
           inFlight.delete(key)
         }
-      })
+      }).catch(() => {})
     }
 
-    inFlight.set(key, { promise, expiresAt })
-
-    return promise
+    // Return a NEW derived promise for the first caller too
+    return promise.then(v => v)
   } as OnceInstance<TArgs, TResult>
 
   instance.clear = (key?: string) => {
