@@ -1,0 +1,45 @@
+{
+  "name": "@firekid/once",
+  "version": "1.0.0",
+  "description": "Deduplicate async function calls. The modern, memory-safe replacement for inflight.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "inflight",
+    "inflight-replacement",
+    "dedup",
+    "deduplicate",
+    "async",
+    "promise",
+    "once",
+    "memoize",
+    "cache",
+    "request-deduplication",
+    "typescript",
+    "zero-dependencies",
+    "memory-safe"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
