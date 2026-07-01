@@ -1,6 +1,6 @@
 {
   "name": "@firekid/once",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "description": "Deduplicate async function calls. The modern, memory-safe replacement for inflight.",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -13,6 +13,9 @@
     }
   },
   "files": ["dist"],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
@@ -31,11 +34,21 @@
     "memoize",
     "cache",
     "request-deduplication",
+    "stale-while-revalidate",
     "typescript",
     "zero-dependencies",
     "memory-safe"
   ],
+  "author": "Firekid",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Firekid-is-him/once.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Firekid-is-him/once/issues"
+  },
+  "homepage": "https://github.com/Firekid-is-him/once#readme",
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.0.0",
