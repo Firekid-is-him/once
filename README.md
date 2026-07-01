@@ -69,15 +69,18 @@ once(fn, options?)
 ```
 
 ```ts
-type OnceOptions<TArgs> = {
+type OnceOptions<TArgs, TResult = any> = {
   key?: string | ((...args: TArgs) => string)
   ttl?: number
   maxKeys?: number
   onDeduplicated?: (key: string) => void
+  staleWhileRevalidate?: boolean
+  shouldCache?: (value: TResult) => boolean
+  store?: Map<string, OnceCacheEntry<TResult>>
 }
 ```
 
-Returns an `OnceInstance` which is callable and also has `.clear()`, `.size()`, and `.has()` methods.
+Returns an `OnceInstance`, callable and with `.clear()`, `.size()`, `.has()`, `.abort()`, `.refresh()`, and `.stats()` methods.
 
 ### createOnce(defaults?)
 
@@ -138,15 +141,50 @@ const fn = once(fetchUser, {
 })
 ```
 
+### staleWhileRevalidate
+
+Requires `ttl`. Once the cached value expires, the next call still gets the stale value immediately while a fresh call runs in the background. Concurrent stale reads never trigger more than one background refresh.
+
+```ts
+const fn = once(fetchConfig, { ttl: 5000, staleWhileRevalidate: true })
+
+const first = await fn()
+await sleep(6000)
+const second = await fn() // stale value, returned instantly, refresh started in background
+```
+
+### shouldCache
+
+Predicate checked against the resolved value. Return `false` to skip caching that result, so the next call executes fresh.
+
+```ts
+const fn = once(fetchUser, {
+  shouldCache: (user) => user !== null
+})
+```
+
+### store
+
+Provide your own `Map` instance for the cache instead of the built-in one, for example to share one map across multiple wrapped functions or swap in a custom `Map` subclass.
+
+```ts
+const shared = new Map()
+const fn = once(fetchUser, { store: shared })
+```
+
 ## Instance Methods
 
 ```ts
-const fn = once(fetchUser)
+const fn = once(fetchUser, { ttl: 5000 })
 
-fn.clear()         // clear all in-flight entries
+fn.clear()         // clear all cached and in-flight entries
 fn.clear('123')    // clear a specific key
-fn.size()          // number of currently in-flight keys
-fn.has('123')      // whether a key is currently in-flight
+fn.size()          // number of currently tracked keys
+fn.has('123')      // whether a key is currently tracked
+fn.abort()         // stop tracking every in-flight call
+fn.abort('123')    // stop tracking a specific key, next call executes fresh
+fn.refresh('123')  // bypass the cache for this call, updates it with the fresh result
+fn.stats()         // { hits, misses, dedup } counters
 ```
 
 ## Error Handling
@@ -246,6 +284,9 @@ type OnceInstance<TArgs, TResult> = {
   clear: (key?: string) => void
   size: () => number
   has: (key: string) => boolean
+  abort: (key?: string) => void
+  refresh: (...args: TArgs) => Promise<TResult>
+  stats: () => { hits: number; misses: number; dedup: number }
 }
 ```
 
